@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, MapPin, Music, HelpCircle, Info, Globe, Award } from 'lucide-react';
+import { BookOpen, MapPin, Music, HelpCircle, Info, Globe, Award, Flame, ArrowRight } from 'lucide-react';
 
 // --- DATA & CONTENT ---
 
@@ -428,18 +428,14 @@ const DefinitionCard = ({ word, data, onClose }) => {
 };
 
 const InteractiveLine = ({ text, onWordClick }) => {
-  // Regex to find words wrapped in {}
   const parts = text.split(/(\{.*?\})/g);
-
   return (
     <p className="mb-2 leading-relaxed text-lg">
       {parts.map((part, i) => {
         if (part.startsWith("{") && part.endsWith("}")) {
           const word = part.slice(1, -1);
-          // Check if word exists in glossary (clean punctuation if needed)
           const cleanWord = word.replace(/[.,]/g, '').toLowerCase();
           const isInteractive = glossaryData[cleanWord];
-
           return (
             <span 
               key={i}
@@ -462,8 +458,238 @@ const InteractiveLine = ({ text, onWordClick }) => {
   );
 };
 
+const polysemyChallenges = [
+  { 
+    word: "Plata", 
+    flag: "🌎", 
+    country: "Latinoamérica", 
+    question: "¿Qué significa aquí?", 
+    correct: "Dinero", 
+    options: ["Metal precioso", "Dinero", "Playa"] 
+  },
+  { 
+    word: "Pana", 
+    flag: "🇻🇪", 
+    country: "Venezuela", 
+    question: "¿Quién es tu pana?", 
+    correct: "Tu amigo", 
+    options: ["Tu enemigo", "Tu jefe", "Tu amigo"] 
+  },
+  { 
+    word: "Pana", 
+    flag: "🇪🇸", 
+    country: "España", 
+    question: "¿Qué es la pana aquí?", 
+    correct: "Tela gruesa", 
+    options: ["Un amigo", "Tela gruesa", "Un tipo de pan"] 
+  },
+  { 
+    word: "Porro", 
+    flag: "🇪🇸", 
+    country: "España", 
+    question: "Si te ofrecen un porro...", 
+    correct: "Cigarrillo de marihuana", 
+    options: ["Ritmo musical", "Cigarrillo de marihuana", "Un churro"] 
+  },
+  { 
+    word: "Fresa", 
+    flag: "🇲🇽", 
+    country: "México", 
+    question: "¿A qué se refiere?", 
+    correct: "Persona presumida/pija", 
+    options: ["Fruta roja", "Persona presumida/pija", "Herramienta"] 
+  },
+  { 
+    word: "Fresa", 
+    flag: "🌍", 
+    country: "General", 
+    question: "¿Qué es habitualmente?", 
+    correct: "Fruta roja", 
+    options: ["Persona presumida", "Fruta roja", "Un beso"] 
+  },
+  { 
+    word: "Cheto", 
+    flag: "🇦🇷", 
+    country: "Argentina", 
+    question: "¿Qué significa ser cheto?", 
+    correct: "Adinerado/Esnob", 
+    options: ["Fruta", "Adinerado/Esnob", "Pobre"] 
+  },
+  { 
+    word: "Concha", 
+    flag: "🇦🇷", 
+    country: "Argentina", 
+    question: "⚠️ ¡Cuidado! ¿Qué significa?", 
+    correct: "Vagina (Vulgar)", 
+    options: ["Nombre de mujer", "Caparazón", "Vagina (Vulgar)"] 
+  },
+  { 
+    word: "Concha", 
+    flag: "🇪🇸", 
+    country: "España", 
+    question: "¿Qué significa aquí?", 
+    correct: "Nombre o Caparazón", 
+    options: ["Vagina", "Nombre o Caparazón", "Insulto"] 
+  },
+  { 
+    word: "Polla", 
+    flag: "🇨🇱", 
+    country: "Chile", 
+    question: "¿Qué es la polla de beneficencia?", 
+    correct: "Lotería/Apuesta", 
+    options: ["Pene", "Lotería/Apuesta", "Gallina"] 
+  },
+  { 
+    word: "Polla", 
+    flag: "🇪🇸", 
+    country: "España", 
+    question: "⚠️ Significado vulgar:", 
+    correct: "Pene", 
+    options: ["Apuesta", "Pene", "Pollo hembra"] 
+  },
+  { 
+    word: "Pitillo", 
+    flag: "🇪🇸", 
+    country: "España", 
+    question: "¿Qué es un pitillo?", 
+    correct: "Cigarrillo", 
+    options: ["Cigarrillo", "Pajita", "Silbato"] 
+  },
+  { 
+    word: "Pitillo", 
+    flag: "🇨🇴", 
+    country: "Colombia/Venezuela", 
+    question: "¿Para qué sirve?", 
+    correct: "Para beber (Pajita)", 
+    options: ["Para fumar", "Para beber (Pajita)", "Para silbar"] 
+  },
+  { 
+    word: "Pitillo", 
+    flag: "🇲🇽", 
+    country: "México", 
+    question: "⚠️ Significado vulgar:", 
+    correct: "Pene", 
+    options: ["Cigarrillo", "Pajita", "Pene"] 
+  },
+  { 
+    word: "Chaqueta", 
+    flag: "🇪🇸", 
+    country: "España", 
+    question: "¿Qué es?", 
+    correct: "Abrigo", 
+    options: ["Abrigo", "Masturbación", "Zapato"] 
+  },
+  { 
+    word: "Chaqueta", 
+    flag: "🇲🇽", 
+    country: "México", 
+    question: "⚠️ 'Hacerse una chaqueta' es:", 
+    correct: "Masturbarse", 
+    options: ["Ponerse abrigo", "Masturbarse", "Irse"] 
+  }
+];
+
+const WarmUpTab = ({ onFinish }) => {
+  const [polyIdx, setPolyIdx] = useState(0);
+  const [polyStatus, setPolyStatus] = useState('waiting'); // waiting, correct, incorrect
+
+  const handlePolyOption = (option) => {
+    if (polyStatus !== 'waiting') return;
+    if (option === polysemyChallenges[polyIdx].correct) {
+      setPolyStatus('correct');
+    } else {
+      setPolyStatus('incorrect');
+    }
+  };
+
+  const nextPoly = () => {
+    if (polyIdx < polysemyChallenges.length - 1) {
+      setPolyIdx(polyIdx + 1);
+      setPolyStatus('waiting');
+    } else {
+      setPolyIdx(0); // Loop back to start
+      setPolyStatus('waiting');
+    }
+  };
+  
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-8 space-y-10 animate-fade-in">
+      <div className="text-center mb-4">
+        <h2 className="text-3xl font-bold text-indigo-900 mb-2 flex items-center justify-center">
+          <Flame className="mr-2 text-orange-500" /> Calentamiento
+        </h2>
+        <p className="text-gray-600">Ronda Relámpago: Prepara tu cerebro para las confusiones dialectales.</p>
+      </div>
+
+      {/* Activity: Polysemy Challenge */}
+      <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 relative overflow-hidden">
+        <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center justify-center">
+           El Polísemota
+        </h3>
+        
+        <div className="bg-white rounded-xl p-6 shadow-md text-center max-w-md mx-auto">
+          <div className="text-xs text-gray-400 uppercase tracking-widest mb-2">Palabra Clave</div>
+          <div className="text-4xl font-extrabold text-indigo-600 mb-6 capitalize">{polysemyChallenges[polyIdx].word}</div>
+          
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <span className="text-2xl">{polysemyChallenges[polyIdx].flag}</span>
+              <span className="font-bold text-gray-800">{polysemyChallenges[polyIdx].country}</span>
+            </div>
+            <p className="text-gray-600 text-sm">{polysemyChallenges[polyIdx].question}</p>
+          </div>
+
+          <div className="space-y-2">
+            {polysemyChallenges[polyIdx].options.map((opt, idx) => {
+              let btnClass = "w-full p-3 rounded-lg border transition font-medium ";
+              if (polyStatus === 'waiting') {
+                btnClass += "bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700";
+              } else if (opt === polysemyChallenges[polyIdx].correct) {
+                btnClass += "bg-green-100 border-green-500 text-green-800";
+              } else {
+                btnClass += "bg-gray-50 border-gray-200 text-gray-400 opacity-50";
+              }
+              
+              return (
+                <button 
+                  key={idx}
+                  onClick={() => handlePolyOption(opt)}
+                  disabled={polyStatus !== 'waiting'}
+                  className={btnClass}
+                >
+                  {opt}
+                </button>
+              )
+            })}
+          </div>
+
+          {polyStatus !== 'waiting' && (
+            <div className="mt-4 animate-fade-in">
+               <button 
+                onClick={nextPoly}
+                className="flex items-center justify-center mx-auto text-blue-600 font-bold hover:bg-blue-50 px-4 py-2 rounded transition"
+               >
+                 {polyIdx < polysemyChallenges.length - 1 ? 'Siguiente Palabra' : 'Volver a empezar'} <ArrowRight size={16} className="ml-2" />
+               </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="text-center pt-8 pb-4">
+        <button 
+          onClick={onFinish}
+          className="bg-indigo-600 text-white px-10 py-4 rounded-full font-bold text-xl hover:bg-indigo-700 shadow-xl transform hover:scale-105 transition flex items-center mx-auto"
+        >
+          <Music className="mr-2" /> ¡Ir a la Canción!
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
-  const [activeTab, setActiveTab] = useState('lyrics'); // lyrics, quiz, glossary
+  const [activeTab, setActiveTab] = useState('warmup'); // Start on warmup
   const [selectedWord, setSelectedWord] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
@@ -500,6 +726,12 @@ const App = () => {
           
           <nav className="flex space-x-1 bg-indigo-800 rounded-lg p-1">
             <button 
+              onClick={() => setActiveTab('warmup')}
+              className={`px-4 py-2 rounded-md flex items-center space-x-2 ${activeTab === 'warmup' ? 'bg-white text-indigo-800 shadow' : 'text-indigo-200 hover:bg-indigo-600'}`}
+            >
+              <Flame size={18} /> <span className="hidden sm:inline">Calentamiento</span>
+            </button>
+            <button 
               onClick={() => setActiveTab('lyrics')}
               className={`px-4 py-2 rounded-md flex items-center space-x-2 ${activeTab === 'lyrics' ? 'bg-white text-indigo-800 shadow' : 'text-indigo-200 hover:bg-indigo-600'}`}
             >
@@ -518,113 +750,117 @@ const App = () => {
       <main className="flex-grow max-w-6xl mx-auto w-full p-4 grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* LEFT COLUMN: Content Area */}
-        <div className={`md:col-span-8 space-y-6 ${activeTab === 'lyrics' ? 'block' : 'hidden'}`}>
+        <div className={`md:col-span-8 space-y-6`}>
           
-          {/* Video Embed Placeholder */}
-          <div className="bg-black rounded-lg overflow-hidden shadow-xl aspect-video relative group">
-            <iframe 
-              className="w-full h-full"
-              src="https://www.youtube.com/embed/Xyp7xt-ygy0" 
-              title="Qué difícil es hablar el español"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowFullScreen
-            ></iframe>
-          </div>
+          {activeTab === 'warmup' && <WarmUpTab onFinish={() => setActiveTab('lyrics')} />}
 
-          {/* Lyrics Container */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10">
-            <div className="flex items-center justify-between mb-6 border-b pb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Letra de la canción</h2>
-              <div className="flex items-center text-sm text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-                <Info size={16} className="mr-2" />
-                <span>Haz clic en las palabras <span className="bg-yellow-200 text-yellow-900 px-1 rounded border-b border-yellow-500">resaltadas</span></span>
+          <div className={activeTab === 'lyrics' ? 'block space-y-6' : 'hidden'}>
+            {/* Video Embed Placeholder */}
+            <div className="bg-black rounded-lg overflow-hidden shadow-xl aspect-video relative group">
+              <iframe 
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/Xyp7xt-ygy0" 
+                title="Qué difícil es hablar el español"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+
+            {/* Lyrics Container */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10">
+              <div className="flex items-center justify-between mb-6 border-b pb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Letra de la canción</h2>
+                <div className="flex items-center text-sm text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                  <Info size={16} className="mr-2" />
+                  <span>Haz clic en las palabras <span className="bg-yellow-200 text-yellow-900 px-1 rounded border-b border-yellow-500">resaltadas</span></span>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                {songLyrics.map((stanza, idx) => (
+                  <div key={idx} className={`relative ${stanza.type === 'chorus' ? 'pl-6 border-l-4 border-indigo-300 bg-indigo-50 p-4 rounded-r-lg' : ''}`}>
+                    {stanza.type === 'chorus' && (
+                      <span className="absolute -left-3 top-0 bg-indigo-500 text-white text-xs px-2 py-0.5 rounded transform -translate-y-1/2">CORO</span>
+                    )}
+                    {stanza.lines.map((line, lIdx) => (
+                      <InteractiveLine key={lIdx} text={line} onWordClick={handleWordClick} />
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div className="space-y-8">
-              {songLyrics.map((stanza, idx) => (
-                <div key={idx} className={`relative ${stanza.type === 'chorus' ? 'pl-6 border-l-4 border-indigo-300 bg-indigo-50 p-4 rounded-r-lg' : ''}`}>
-                  {stanza.type === 'chorus' && (
-                    <span className="absolute -left-3 top-0 bg-indigo-500 text-white text-xs px-2 py-0.5 rounded transform -translate-y-1/2">CORO</span>
-                  )}
-                  {stanza.lines.map((line, lIdx) => (
-                    <InteractiveLine key={lIdx} text={line} onWordClick={handleWordClick} />
-                  ))}
-                </div>
-              ))}
-            </div>
           </div>
-        </div>
 
-        {/* QUIZ TAB */}
-        <div className={`md:col-span-8 ${activeTab === 'quiz' ? 'block' : 'hidden'}`}>
-          <div className="bg-white rounded-xl shadow-sm p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-indigo-800">
-              <Award className="mr-2" /> ¿Cuánto has aprendido?
-            </h2>
-            
-            <div className="space-y-8">
-              {quizQuestions.map((q) => (
-                <div key={q.id} className="border-b border-gray-100 pb-6 last:border-0">
-                  <p className="font-medium text-lg mb-3 text-gray-800">{q.id}. {q.question}</p>
-                  <div className="space-y-2">
-                    {q.options.map((opt, idx) => {
-                      const isSelected = quizAnswers[q.id] === idx;
-                      const isCorrect = q.correct === idx;
-                      let btnClass = "w-full text-left p-3 rounded border transition-all ";
-                      
-                      if (showResults) {
-                        if (isCorrect) btnClass += "bg-green-100 border-green-500 text-green-800";
-                        else if (isSelected && !isCorrect) btnClass += "bg-red-100 border-red-500 text-red-800";
-                        else btnClass += "bg-gray-50 border-gray-200 opacity-50";
-                      } else {
-                        btnClass += isSelected 
-                          ? "bg-indigo-100 border-indigo-500 text-indigo-900" 
-                          : "bg-white border-gray-300 hover:bg-gray-50";
-                      }
+          {/* QUIZ TAB */}
+          <div className={activeTab === 'quiz' ? 'block' : 'hidden'}>
+            <div className="bg-white rounded-xl shadow-sm p-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center text-indigo-800">
+                <Award className="mr-2" /> ¿Cuánto has aprendido?
+              </h2>
+              
+              <div className="space-y-8">
+                {quizQuestions.map((q) => (
+                  <div key={q.id} className="border-b border-gray-100 pb-6 last:border-0">
+                    <p className="font-medium text-lg mb-3 text-gray-800">{q.id}. {q.question}</p>
+                    <div className="space-y-2">
+                      {q.options.map((opt, idx) => {
+                        const isSelected = quizAnswers[q.id] === idx;
+                        const isCorrect = q.correct === idx;
+                        let btnClass = "w-full text-left p-3 rounded border transition-all ";
+                        
+                        if (showResults) {
+                          if (isCorrect) btnClass += "bg-green-100 border-green-500 text-green-800";
+                          else if (isSelected && !isCorrect) btnClass += "bg-red-100 border-red-500 text-red-800";
+                          else btnClass += "bg-gray-50 border-gray-200 opacity-50";
+                        } else {
+                          btnClass += isSelected 
+                            ? "bg-indigo-100 border-indigo-500 text-indigo-900" 
+                            : "bg-white border-gray-300 hover:bg-gray-50";
+                        }
 
-                      return (
-                        <button
-                          key={idx}
-                          disabled={showResults}
-                          onClick={() => handleQuizOption(q.id, idx)}
-                          className={btnClass}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {showResults && (
-                    <div className={`mt-3 text-sm p-3 rounded ${quizAnswers[q.id] === q.correct ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                      <strong>Explicación:</strong> {q.explanation}
+                        return (
+                          <button
+                            key={idx}
+                            disabled={showResults}
+                            onClick={() => handleQuizOption(q.id, idx)}
+                            className={btnClass}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-              {!showResults ? (
-                <button 
-                  onClick={() => setShowResults(true)}
-                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition shadow"
-                >
-                  Verificar Respuestas
-                </button>
-              ) : (
-                <div className="w-full flex justify-between items-center">
-                  <div className="text-xl">
-                    Tu nota: <span className="font-bold text-indigo-700">{calculateScore()}</span> / {quizQuestions.length}
+                    {showResults && (
+                      <div className={`mt-3 text-sm p-3 rounded ${quizAnswers[q.id] === q.correct ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                        <strong>Explicación:</strong> {q.explanation}
+                      </div>
+                    )}
                   </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                {!showResults ? (
                   <button 
-                    onClick={() => { setShowResults(false); setQuizAnswers({}); }}
-                    className="text-indigo-600 hover:text-indigo-800 font-medium"
+                    onClick={() => setShowResults(true)}
+                    className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition shadow"
                   >
-                    Intentar de nuevo
+                    Verificar Respuestas
                   </button>
-                </div>
-              )}
+                ) : (
+                  <div className="w-full flex justify-between items-center">
+                    <div className="text-xl">
+                      Tu nota: <span className="font-bold text-indigo-700">{calculateScore()}</span> / {quizQuestions.length}
+                    </div>
+                    <button 
+                      onClick={() => { setShowResults(false); setQuizAnswers({}); }}
+                      className="text-indigo-600 hover:text-indigo-800 font-medium"
+                    >
+                      Intentar de nuevo
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
